@@ -24,25 +24,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!email || !password) return null;
 
-        const db = getDb();
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, email))
-          .limit(1);
+        try {
+          const db = getDb();
+          const [user] = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, email))
+            .limit(1);
 
-        if (!user) return null;
+          if (!user) return null;
 
-        const valid = await compare(password, user.passwordHash);
-        if (!valid) return null;
+          const valid = await compare(password, user.passwordHash);
+          if (!valid) return null;
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role as UserRole,
-          categoryId: user.categoryId,
-        };
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role as UserRole,
+            categoryId: user.categoryId,
+          };
+        } catch (error) {
+          console.error("[auth] Error al consultar la base de datos:", error);
+          return null;
+        }
       },
     }),
   ],

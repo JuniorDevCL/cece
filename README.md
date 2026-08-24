@@ -48,19 +48,28 @@ npm run dev
 | Deportista | `diego.rivas@cece.club` | `excelsior2026` |
 | Deportista | `sofia.torres@cece.club` | `excelsior2026` |
 
-## Despliegue en Vercel
+## Despliegue en Vercel (100% online)
 
 1. Conecta el repo `JuniorDevCL/cece`
-2. En **Storage → Postgres**, crea una base Neon (Vercel Postgres)
-3. En **Settings → Environment Variables**, agrega:
-   - `DATABASE_URL` (automática al conectar Neon en Storage)
-   - `AUTH_SECRET` (genera uno seguro)
+2. En **Storage → Postgres**, conecta Neon (crea `DATABASE_URL` automáticamente)
+3. En **Settings → Environment Variables** (Production + Preview):
+   - `DATABASE_URL` — automática al conectar Neon
+   - `AUTH_SECRET` — secreto largo y aleatorio
    - `AUTH_URL` = `https://tu-dominio.vercel.app`
-4. Redeploy
-5. Ejecuta el seed una vez (local apuntando a la DB de producción o desde CLI):
+4. **Redeploy** del último commit en `master`
 
-```bash
-npm run db:seed
+En cada deploy, Vercel ejecuta el seed automáticamente **solo si la base está vacía** (crea tablas + usuarios demo).
+
+Si necesitas forzar la inicialización manualmente (sin usar tu PC), abre en el navegador:
+
+```
+https://tu-dominio.vercel.app/api/setup?secret=TU_AUTH_SECRET
+```
+
+Para restaurar datos demo desde cero (borra lo existente):
+
+```
+https://tu-dominio.vercel.app/api/setup?secret=TU_AUTH_SECRET&force=1
 ```
 
 ## Funcionalidades

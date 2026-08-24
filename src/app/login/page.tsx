@@ -42,7 +42,7 @@ export default function LoginPage() {
       if (result?.error) {
         if (result.error === "Configuration") {
           setError(
-            "Auth no está configurado en el servidor. Falta AUTH_SECRET o AUTH_URL en Vercel."
+            "Error de configuración en el servidor. Revisa AUTH_SECRET y AUTH_URL en Vercel, y que la base Neon tenga tablas (npm run db:seed)."
           );
         } else {
           setError("Email o contraseña incorrectos.");
