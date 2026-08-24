@@ -8,29 +8,40 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useSession } from "next-auth/react";
 import {
-  addExerciseAction,
-  addRoutineAction,
-  createPlanAction,
-  deletePlanAction,
-  getTrainingState,
-  type RoutineExerciseDraft,
-  type TrainingStatePayload,
-} from "@/lib/actions/training";
-import type {
-  PeriodType,
-  Routine,
-} from "@/lib/types";
-import {
-  exercises as fallbackExercises,
-  routineAssignments as fallbackAssignments,
-  routineExercises as fallbackRoutineExercises,
-  routines as fallbackRoutines,
-  trainingPeriods as fallbackPeriods,
+  exercises as initialExercises,
+  routineAssignments as initialAssignments,
+  routineExercises as initialRoutineExercises,
+  routines as initialRoutines,
+  trainingPeriods as initialPeriods,
 } from "@/lib/mockData";
+import type {
+  Exercise,
+  Routine,
+  RoutineAssignment,
+  RoutineDayNumber,
+  RoutineExercise,
+  PeriodType,
+  TrainingPeriod,
+} from "@/lib/types";
 
-export type { RoutineExerciseDraft };
+const STORAGE_KEY = "cece-training-data-v4";
+
+interface TrainingState {
+  periods: TrainingPeriod[];
+  routines: Routine[];
+  routineExercises: RoutineExercise[];
+  assignments: RoutineAssignment[];
+  exercises: Exercise[];
+}
+
+export interface RoutineExerciseDraft {
+  exerciseId: string;
+  dayNumber: RoutineDayNumber;
+  sets: number;
+  reps: number;
+  restSeconds: number;
+}
 
 export interface TrainingPlanDraft {
   categoryId: string;
@@ -47,152 +58,168 @@ export interface ExerciseDraft {
   youtubeUrl: string;
 }
 
-interface DataContextValue extends TrainingStatePayload {
-  isLoading: boolean;
-  error: string | null;
-  refresh: () => Promise<void>;
+interface DataContextValue extends TrainingState {
   addRoutine: (
     routine: Pick<Routine, "name" | "description">,
-    items: RoutineExerciseDraft[]
-  ) => Promise<void>;
-  addExercise: (exercise: ExerciseDraft) => Promise<void>;
-  createPlan: (plan: TrainingPlanDraft) => Promise<void>;
-  deletePlan: (periodId: string) => Promise<void>;
+    items: RoutineExerciseDraft[],
+    createdById: string
+  ) => void;
+  addExercise: (exercise: ExerciseDraft) => void;
+  createPlan: (plan: TrainingPlanDraft) => void;
+  deletePlan: (periodId: string) => void;
+  resetData: () => void;
 }
 
-const fallbackState: TrainingStatePayload = {
-  periods: fallbackPeriods,
-  routines: fallbackRoutines,
-  routineExercises: fallbackRoutineExercises,
-  assignments: fallbackAssignments,
-  exercises: fallbackExercises,
+const initialState: TrainingState = {
+  periods: initialPeriods,
+  routines: initialRoutines,
+  routineExercises: initialRoutineExercises,
+  assignments: initialAssignments,
+  exercises: initialExercises,
 };
+
+function loadTrainingState(): TrainingState {
+  if (typeof window === "undefined") return initialState;
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return initialState;
+  try {
+    const parsed = JSON.parse(saved) as Partial<TrainingState>;
+    return {
+      periods: parsed.periods ?? initialPeriods,
+      routines: parsed.routines ?? initialRoutines,
+      routineExercises: parsed.routineExercises ?? initialRoutineExercises,
+      assignments: parsed.assignments ?? initialAssignments,
+      exercises: parsed.exercises ?? initialExercises,
+    };
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+    return initialState;
+  }
+}
 
 const DataContext = createContext<DataContextValue | null>(null);
 
-export function DataProvider({ children }: { children: React.ReactNode }) {
-  const { status } = useSession();
-  const [state, setState] = useState<TrainingStatePayload>(fallbackState);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+function makeId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
 
-  const refresh = useCallback(async () => {
-    if (status !== "authenticated") {
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await getTrainingState();
-      setState(data);
-    } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "No se pudieron cargar los datos de entrenamiento"
-      );
-      setState(fallbackState);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [status]);
+const PERIOD_PRESENTATION: Record<
+  PeriodType,
+  { name: string; color: string }
+> = {
+  carga: { name: "Carga", color: "#ff161f" },
+  descarga: { name: "Descarga", color: "#3d7bff" },
+  transicion: { name: "Transición", color: "#f9e200" },
+};
+
+export function DataProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<TrainingState>(loadTrainingState);
 
   useEffect(() => {
-    if (status === "loading") return;
-
-    if (status !== "authenticated") {
-      queueMicrotask(() => setIsLoading(false));
-      return;
-    }
-
-    let cancelled = false;
-    queueMicrotask(() => {
-      if (!cancelled) {
-        setIsLoading(true);
-        setError(null);
-      }
-    });
-
-    getTrainingState()
-      .then((data) => {
-        if (!cancelled) setState(data);
-      })
-      .catch((cause) => {
-        if (!cancelled) {
-          setError(
-            cause instanceof Error
-              ? cause.message
-              : "No se pudieron cargar los datos de entrenamiento"
-          );
-          setState(fallbackState);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [status]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [state]);
 
   const addRoutine = useCallback(
-    async (
+    (
       routine: Pick<Routine, "name" | "description">,
-      items: RoutineExerciseDraft[]
+      items: RoutineExerciseDraft[],
+      createdById: string
     ) => {
-      await addRoutineAction(routine, items);
-      await refresh();
+      const routineId = makeId("rut");
+      const nextRoutine: Routine = {
+        ...routine,
+        id: routineId,
+        createdById,
+        createdAt: new Date().toISOString(),
+      };
+      const nextItems = items.map((item, index): RoutineExercise => {
+        const previousInDay = items
+          .slice(0, index)
+          .filter((value) => value.dayNumber === item.dayNumber).length;
+        return {
+          ...item,
+          id: makeId("re"),
+          routineId,
+          order: previousInDay + 1,
+        };
+      });
+      setState((current) => ({
+        ...current,
+        routines: [...current.routines, nextRoutine],
+        routineExercises: [...current.routineExercises, ...nextItems],
+      }));
     },
-    [refresh]
+    []
   );
 
-  const addExercise = useCallback(
-    async (exercise: ExerciseDraft) => {
-      await addExerciseAction(exercise);
-      await refresh();
-    },
-    [refresh]
-  );
+  const addExercise = useCallback((exercise: ExerciseDraft) => {
+    const next: Exercise = {
+      id: makeId("ex"),
+      name: exercise.name.trim(),
+      muscleGroup: exercise.muscleGroup.trim(),
+      description: exercise.description.trim(),
+      youtubeUrl: exercise.youtubeUrl.trim(),
+    };
+    setState((current) => ({
+      ...current,
+      exercises: [...current.exercises, next],
+    }));
+  }, []);
 
   const createPlan = useCallback(
-    async (plan: TrainingPlanDraft) => {
-      await createPlanAction(plan);
-      await refresh();
+    (plan: TrainingPlanDraft) => {
+      const periodId = makeId("per");
+      const presentation = PERIOD_PRESENTATION[plan.type];
+      const period: TrainingPeriod = {
+        id: periodId,
+        name: presentation.name,
+        type: plan.type,
+        categoryId: plan.categoryId,
+        startDate: plan.startDate,
+        endDate: plan.endDate,
+        color: presentation.color,
+      };
+      const assignment: RoutineAssignment = {
+        id: makeId("asg"),
+        routineId: plan.routineId,
+        periodId,
+      };
+      setState((current) => ({
+        ...current,
+        periods: [...current.periods, period].sort((a, b) =>
+          a.startDate.localeCompare(b.startDate)
+        ),
+        assignments: [...current.assignments, assignment],
+      }));
     },
-    [refresh]
+    []
   );
 
-  const deletePlan = useCallback(
-    async (periodId: string) => {
-      await deletePlanAction(periodId);
-      await refresh();
-    },
-    [refresh]
-  );
+  const deletePlan = useCallback((periodId: string) => {
+    setState((current) => ({
+      ...current,
+      periods: current.periods.filter((item) => item.id !== periodId),
+      assignments: current.assignments.filter(
+        (item) => item.periodId !== periodId
+      ),
+    }));
+  }, []);
+
+  const resetData = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setState(initialState);
+  }, []);
 
   const value = useMemo(
     () => ({
       ...state,
-      isLoading,
-      error,
-      refresh,
       addRoutine,
       addExercise,
       createPlan,
       deletePlan,
+      resetData,
     }),
-    [
-      state,
-      isLoading,
-      error,
-      refresh,
-      addRoutine,
-      addExercise,
-      createPlan,
-      deletePlan,
-    ]
+    [state, addRoutine, addExercise, createPlan, deletePlan, resetData]
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
@@ -200,8 +227,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
 export function useTrainingData() {
   const context = useContext(DataContext);
-  if (!context) {
-    throw new Error("useTrainingData debe usarse dentro de DataProvider");
-  }
+  if (!context) throw new Error("useTrainingData debe usarse dentro de DataProvider");
   return context;
 }

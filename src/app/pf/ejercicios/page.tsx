@@ -36,7 +36,7 @@ export default function PFEjerciciosPage() {
   const [savedMessage, setSavedMessage] = useState("");
   const [urlError, setUrlError] = useState("");
 
-  async function handleSubmit(event: React.FormEvent) {
+  function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!name.trim() || !muscleGroup.trim() || !youtubeUrl.trim()) return;
 
@@ -45,13 +45,13 @@ export default function PFEjerciciosPage() {
       return;
     }
 
-    await addExercise({
+    addExercise({
       name,
       muscleGroup,
       description,
       youtubeUrl,
     });
-    setSavedMessage(`“${name.trim()}” se agregó al catalogo.`);
+    setSavedMessage(`“${name.trim()}” se agregó al catálogo.`);
     setName("");
     setDescription("");
     setYoutubeUrl("");
