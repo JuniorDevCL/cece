@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Excelsior — Preparación Física</title>
+  <link rel="icon" href="logo.png" />
+  <style>
+    :root {
+      --red: #ff161f;
+      --yellow: #f9e200;
+      --blue: #002e8c;
+      --sky: #3d7bff;
+      --bg: #050d22;
+      --fg: #eff4ff;
+      --card: #0a1735;
+      --muted: #93a4cc;
+      --border: #1c2f63;
+      --sidebar: #071233;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, Segoe UI, sans-serif;
+      background: #050d22;
+      color: var(--fg);
+      background-image:
+        radial-gradient(ellipse 80% 60% at 15% -10%, rgba(0,46,140,.55), transparent 60%),
+        radial-gradient(ellipse 70% 50% at 100% 0%, rgba(255,22,31,.16), transparent 55%);
+      background-attachment: fixed;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    img { max-width: 100%; }
+    .hidden { display: none !important; }
+    .screen { min-height: 100vh; }
+
+    .brand-grid {
+      background-image:
+        linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+      background-size: 44px 44px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      padding: 20px;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      height: 42px; padding: 0 16px; border: 0; border-radius: 12px;
+      background: var(--yellow); color: #08122e; font-weight: 700;
+    }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-ghost {
+      background: transparent; color: var(--muted); border: 1px solid var(--border);
+    }
+    .btn-outline {
+      background: transparent; color: var(--fg); border: 1px solid var(--border);
+    }
+    .btn-danger { color: var(--red); }
+    .badge {
+      display: inline-flex; align-items: center;
+      border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 700;
+      background: rgba(61,123,255,.18); color: var(--sky); border: 1px solid rgba(61,123,255,.3);
+    }
+    .input, .select {
+      width: 100%; height: 44px; border-radius: 12px; border: 1px solid var(--border);
+      background: #16264f; color: var(--fg); padding: 0 12px; outline: none;
+    }
+    .label { font-size: 13px; color: var(--muted); margin-bottom: 6px; display: block; }
+    .muted { color: var(--muted); }
+    h1, h2, h3 { letter-spacing: -.03em; }
+
+    /* Login */
+    .login { display: grid; min-height: 100vh; }
+    @media (min-width: 1024px) { .login { grid-template-columns: 1.05fr 1fr; } }
+    .login-hero {
+      display: none; position: relative; overflow: hidden; padding: 48px;
+      background: linear-gradient(150deg, #002e8c 0%, #050d22 55%, #1a0508 100%);
+      flex-direction: column; justify-content: space-between;
+    }
+    @media (min-width: 1024px) { .login-hero { display: flex; } }
+    .login-form {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 40px 16px; position: relative;
+    }
+    .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .role-btn {
+      min-height: 96px; border-radius: 14px; border: 2px solid var(--border);
+      background: rgba(255,255,255,.03); color: var(--muted);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    }
+    .role-btn.active { border-color: var(--yellow); background: rgba(249,226,0,.1); color: var(--fg); }
+    .role-ico {
+      width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center;
+      background: #12224b; color: var(--muted);
+    }
+    .role-btn.active .role-ico { background: var(--yellow); color: #08122e; }
+
+    /* App shell */
+    .shell { min-height: 100vh; }
+    .sidebar {
+      display: none; position: fixed; inset: 0 auto 0 0; width: 256px;
+      background: var(--sidebar); border-right: 1px solid rgba(255,255,255,.05);
+      flex-direction: column; z-index: 20;
+    }
+    @media (min-width: 1024px) { .sidebar { display: flex; } }
+    .nav-link {
+      height: 44px; display: flex; align-items: center; gap: 12px;
+      padding: 0 12px; border-radius: 12px; color: var(--muted); font-weight: 700; font-size: 14px;
+      text-decoration: none; border: 0; background: transparent; width: 100%; text-align: left;
+    }
+    .nav-link.active { background: var(--yellow); color: #08122e; }
+    .topbar {
+      position: sticky; top: 0; z-index: 15; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,.05);
+      background: rgba(5,13,34,.85); backdrop-filter: blur(10px);
+    }
+    @media (min-width: 1024px) { .topbar { display: none; } }
+    .content { padding-bottom: 96px; }
+    @media (min-width: 1024px) { .content { margin-left: 256px; padding-bottom: 0; } }
+    .bottom-nav {
+      position: fixed; inset: auto 0 0 0; z-index: 20;
+      display: grid; gap: 4px; padding: 8px;
+      border-top: 1px solid rgba(255,255,255,.05);
+      background: rgba(5,13,34,.95); backdrop-filter: blur(10px);
+    }
+    @media (min-width: 1024px) { .bottom-nav { display: none; } }
+    .bottom-nav button {
+      min-height: 48px; border: 0; border-radius: 12px; background: transparent;
+      color: var(--muted); font-size: 12px; font-weight: 700;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    }
+    .bottom-nav button.active { background: rgba(249,226,0,.15); color: var(--yellow); }
+
+    .page { max-width: 1280px; margin: 0 auto; padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 20px; }
+    .grid-2 { display: grid; gap: 20px; }
+    @media (min-width: 1100px) { .grid-2 { grid-template-columns: .8fr 1.2fr; } }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stat {
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.05);
+      border-radius: 14px; padding: 12px; text-align: center;
+    }
+    .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-cell {
+      min-height: 42px; border-radius: 10px; border: 1px solid transparent;
+      background: transparent; color: var(--fg); font-size: 13px; font-weight: 700;
+    }
+    .cal-cell.muted { color: #5d6f97; }
+    .cal-cell.selected { background: rgba(249,226,0,.16); border-color: var(--yellow); }
+    .period-row {
+      position: relative; overflow: hidden; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.05); padding: 16px 16px 16px 20px;
+    }
+    .ex-row {
+      width: 100%; display: flex; align-items: center; gap: 12px; text-align: left;
+      border-radius: 14px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.05);
+      padding: 12px 16px; color: inherit;
+    }
+    .ex-row.done { border-color: rgba(249,226,0,.4); background: rgba(249,226,0,.1); }
+    .dot { width: 12px; height: 12px; border-radius: 999px; display: inline-block; }
+    .modal-bg {
+      position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 40;
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal {
+      width: min(560px, 100%); background: #0c1c40; border: 1px solid var(--border);
+      border-radius: 20px; padding: 22px; max-height: 90vh; overflow: auto;
+    }
+    .type-btn, .routine-btn {
+      width: 100%; display: flex; align-items: center; gap: 12px; text-align: left;
+      border-radius: 14px; border: 1px solid var(--border); background: rgba(255,255,255,.05);
+      padding: 16px; color: inherit; margin-bottom: 8px;
+    }
+    .type-btn.active, .routine-btn.active, .day-tab.active {
+      border-color: var(--yellow); background: rgba(249,226,0,.1);
+    }
+    .day-tab {
+      border-radius: 14px; border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.05); padding: 12px; text-align: center; color: inherit;
+    }
+    .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .week-cell {
+      min-height: 80px; border-radius: 14px; border: 1px solid rgba(255,255,255,.05);
+      background: rgba(255,255,255,.05); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+    }
+    .week-cell.today { border-color: var(--yellow); background: rgba(249,226,0,.12); }
+    .toast {
+      border-radius: 12px; border: 1px solid rgba(249,226,0,.3);
+      background: rgba(249,226,0,.1); color: var(--yellow); padding: 10px 12px; font-size: 14px;
+    }
+    .alert {
+      border-radius: 12px; border: 1px solid rgba(255,22,31,.3);
+      background: rgba(255,22,31,.1); color: var(--red); padding: 12px; font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    const ICONS = {
+      dumbbell: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/></svg>',
+      user: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>',
+      shield: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>',
+      arrow: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
+      calendar: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>',
+      list: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>',
+      logout: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>',
+      plus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>',
+      trash: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>',
+      check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>',
+      flame: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/></svg>',
+      trophy: '<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"/><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"/><path d="M18 9h1.5a1 1 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M6 9a6 6 0 0 0 12 0V3H6z"/><path d="M6 9H4.5a1 1 0 0 1 0-5H6"/></svg>',
+      clock: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+      repeat: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
+      timer: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2h4"/><path d="M12 14v-4"/><path d="M4 13a8 8 0 0 1 8-7 8 8 0 1 1-5.3 14L4 17.6"/><path d="M9 17H4v5"/></svg>',
+      layers: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></svg>',
+      reset: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
+      chevron: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>',
+      party: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z"/></svg>',
+    };
+
+    const PERIOD_TYPES = [
+      { value: "carga", label: "Carga", description: "Mayor volumen e intensidad de trabajo.", color: "#ff161f" },
+      { value: "descarga", label: "Descarga", description: "Reduce la fatiga y prioriza la recuperación.", color: "#3d7bff" },
+      { value: "transicion", label: "Transición", description: "Adaptación entre dos fases de entrenamiento.", color: "#f9e200" },
+    ];
+    const DAY_NAMES = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+    const ROUTINE_DAY_BY_WEEKDAY = { 1: 1, 3: 2, 5: 3 };
+    const WEEKDAY_LABEL = { 1: "Lunes", 2: "Miércoles", 3: "Viernes" };
+    const DAY_ACCENTS = ["#ff161f", "#f9e200", "#3d7bff"];
+
+    const SEED = {
+      categories: [
+        { id: "cat-m-s14", label: "Sub-14 Masculino" },
+        { id: "cat-m-s16", label: "Sub-16 Masculino" },
+        { id: "cat-m-s18", label: "Sub-18 Masculino" },
+        { id: "cat-m-s20", label: "Sub-20 Masculino" },
+        { id: "cat-m-tc", label: "Todo Competidor Masculino" },
+        { id: "cat-f-s14", label: "Sub-14 Femenino" },
+        { id: "cat-f-s16", label: "Sub-16 Femenino" },
+        { id: "cat-f-s18", label: "Sub-18 Femenino" },
+        { id: "cat-f-s20", label: "Sub-20 Femenino" },
+        { id: "cat-f-tc", label: "Todo Competidor Femenino" },
+      ],
+      users: [
+        { id: "user-pf-1", name: "Carlos Mendoza", role: "pf", categoryId: null },
+        { id: "user-ath-1", name: "Lucía Vargas", role: "deportista", categoryId: "cat-f-s20" },
+        { id: "user-ath-2", name: "Diego Rivas", role: "deportista", categoryId: "cat-m-s18" },
+        { id: "user-ath-3", name: "Sofía Torres", role: "deportista", categoryId: "cat-f-s16" },
+      ],
+      exercises: [
+        { id: "ex-1", name: "Sentadilla trasera" },
+        { id: "ex-2", name: "Peso muerto rumano" },
+        { id: "ex-3", name: "Press banca" },
+        { id: "ex-4", name: "Dominadas asistidas" },
+        { id: "ex-5", name: "Salto pliométrico a cajón" },
+        { id: "ex-6", name: "Core anti-rotación (Pallof)" },
+        { id: "ex-7", name: "Zancadas caminando" },
+        { id: "ex-8", name: "Remo con mancuerna" },
+      ],
+      routines: [
+        { id: "rut-1", name: "Fuerza A — Carga", description: "Sesión de fuerza máxima orientada a tren inferior y core." },
+        { id: "rut-2", name: "Potencia Voleibol", description: "Pliometría y empujes para salto y remate." },
+        { id: "rut-3", name: "Descarga Activa", description: "Volumen moderado, foco en calidad de movimiento." },
+      ],
+      routineExercises: [
+        { id: "re-1", routineId: "rut-1", exerciseId: "ex-1", dayNumber: 1, sets: 4, reps: 6, restSeconds: 120, order: 1 },
+        { id: "re-2", routineId: "rut-1", exerciseId: "ex-6", dayNumber: 1, sets: 3, reps: 10, restSeconds: 60, order: 2 },
+        { id: "re-3", routineId: "rut-1", exerciseId: "ex-2", dayNumber: 2, sets: 3, reps: 8, restSeconds: 90, order: 1 },
+        { id: "re-12", routineId: "rut-1", exerciseId: "ex-4", dayNumber: 2, sets: 3, reps: 10, restSeconds: 75, order: 2 },
+        { id: "re-4", routineId: "rut-1", exerciseId: "ex-3", dayNumber: 3, sets: 4, reps: 6, restSeconds: 120, order: 1 },
+        { id: "re-13", routineId: "rut-1", exerciseId: "ex-8", dayNumber: 3, sets: 3, reps: 10, restSeconds: 60, order: 2 },
+        { id: "re-5", routineId: "rut-2", exerciseId: "ex-5", dayNumber: 1, sets: 4, reps: 5, restSeconds: 90, order: 1 },
+        { id: "re-6", routineId: "rut-2", exerciseId: "ex-7", dayNumber: 1, sets: 3, reps: 10, restSeconds: 75, order: 2 },
+        { id: "re-7", routineId: "rut-2", exerciseId: "ex-4", dayNumber: 2, sets: 3, reps: 8, restSeconds: 90, order: 1 },
+        { id: "re-14", routineId: "rut-2", exerciseId: "ex-1", dayNumber: 2, sets: 4, reps: 6, restSeconds: 120, order: 2 },
+        { id: "re-8", routineId: "rut-2", exerciseId: "ex-8", dayNumber: 3, sets: 3, reps: 10, restSeconds: 75, order: 1 },
+        { id: "re-15", routineId: "rut-2", exerciseId: "ex-6", dayNumber: 3, sets: 3, reps: 12, restSeconds: 60, order: 2 },
+        { id: "re-9", routineId: "rut-3", exerciseId: "ex-1", dayNumber: 1, sets: 3, reps: 10, restSeconds: 75, order: 1 },
+        { id: "re-16", routineId: "rut-3", exerciseId: "ex-7", dayNumber: 1, sets: 3, reps: 12, restSeconds: 45, order: 2 },
+        { id: "re-10", routineId: "rut-3", exerciseId: "ex-6", dayNumber: 2, sets: 3, reps: 12, restSeconds: 45, order: 1 },
+        { id: "re-17", routineId: "rut-3", exerciseId: "ex-2", dayNumber: 2, sets: 3, reps: 10, restSeconds: 60, order: 2 },
+        { id: "re-11", routineId: "rut-3", exerciseId: "ex-8", dayNumber: 3, sets: 3, reps: 12, restSeconds: 60, order: 1 },
+        { id: "re-18", routineId: "rut-3", exerciseId: "ex-3", dayNumber: 3, sets: 3, reps: 10, restSeconds: 75, order: 2 },
+      ],
+      periods: [
+        { id: "per-1", name: "Carga", type: "carga", categoryId: "cat-f-s20", startDate: "2026-01-01", endDate: "2026-03-15", color: "#ff161f" },
+        { id: "per-2", name: "Descarga", type: "descarga", categoryId: "cat-f-s20", startDate: "2026-03-16", endDate: "2026-05-31", color: "#3d7bff" },
+        { id: "per-3", name: "Carga competitiva", type: "carga", categoryId: "cat-f-s20", startDate: "2026-06-01", endDate: "2026-08-31", color: "#ff161f" },
+        { id: "per-4", name: "Transición", type: "transicion", categoryId: "cat-m-s18", startDate: "2026-06-01", endDate: "2026-08-31", color: "#f9e200" },
+        { id: "per-5", name: "Descarga", type: "descarga", categoryId: "cat-f-s16", startDate: "2026-06-01", endDate: "2026-08-31", color: "#3d7bff" },
+        { id: "per-6", name: "Carga", type: "carga", categoryId: "cat-m-s14", startDate: "2026-06-01", endDate: "2026-12-31", color: "#ff161f" },
+        { id: "per-7", name: "Carga", type: "carga", categoryId: "cat-m-s16", startDate: "2026-06-01", endDate: "2026-12-31", color: "#ff161f" },
+        { id: "per-8", name: "Descarga", type: "descarga", categoryId: "cat-m-s20", startDate: "2026-06-01", endDate: "2026-12-31", color: "#3d7bff" },
+        { id: "per-9", name: "Carga", type: "carga", categoryId: "cat-m-tc", startDate: "2026-06-01", endDate: "2026-12-31", color: "#ff161f" },
+        { id: "per-10", name: "Transición", type: "transicion", categoryId: "cat-f-s14", startDate: "2026-06-01", endDate: "2026-12-31", color: "#f9e200" },
+        { id: "per-11", name: "Carga", type: "carga", categoryId: "cat-f-s18", startDate: "2026-06-01", endDate: "2026-12-31", color: "#ff161f" },
+        { id: "per-12", name: "Carga", type: "carga", categoryId: "cat-f-tc", startDate: "2026-06-01", endDate: "2026-12-31", color: "#ff161f" },
+      ],
+      assignments: [
+        { id: "asg-1", routineId: "rut-1", periodId: "per-1" },
+        { id: "asg-2", routineId: "rut-3", periodId: "per-2" },
+        { id: "asg-3", routineId: "rut-2", periodId: "per-3" },
+        { id: "asg-4", routineId: "rut-2", periodId: "per-4" },
+        { id: "asg-5", routineId: "rut-3", periodId: "per-5" },
+        { id: "asg-6", routineId: "rut-1", periodId: "per-6" },
+        { id: "asg-7", routineId: "rut-2", periodId: "per-7" },
+        { id: "asg-8", routineId: "rut-3", periodId: "per-8" },
+        { id: "asg-9", routineId: "rut-2", periodId: "per-9" },
+        { id: "asg-10", routineId: "rut-3", periodId: "per-10" },
+        { id: "asg-11", routineId: "rut-1", periodId: "per-11" },
+        { id: "asg-12", routineId: "rut-2", periodId: "per-12" },
+      ],
+    };
+
+    function clone(data) { return JSON.parse(JSON.stringify(data)); }
+    function uid(prefix) { return prefix + "-" + Math.random().toString(36).slice(2, 8); }
+    function iso(date) {
+      return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+    }
+    function parseDate(value) { return new Date(value + "T12:00:00"); }
+    function formatDate(value) {
+      return parseDate(value).toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" });
+    }
+    function emptyDay(n) { return { exerciseId: "", dayNumber: n, sets: 3, reps: 10, restSeconds: 60 }; }
+
+    const today = new Date();
+    const todayIso = iso(today);
+    const nextSession = (() => {
+      for (let i = 0; i <= 7; i++) {
+        const d = new Date(today); d.setDate(today.getDate() + i);
+        const day = ROUTINE_DAY_BY_WEEKDAY[d.getDay()];
+        if (day) return { date: d, routineDay: day, isToday: i === 0 };
+      }
+      return { date: today, routineDay: 1, isToday: false };
+    })();
+
+    const state = {
+      screen: "login",
+      loginMode: "pf",
+      loginCategoryId: "",
+      session: null,
+      pfCategoryId: "cat-f-s20",
+      selectedDate: todayIso,
+      calendarCursor: new Date(today.getFullYear(), today.getMonth(), 1),
+      plannerOpen: false,
+      plannerStep: 1,
+      plan: { startDate: "", endDate: "", type: "", routineId: "" },
+      routineForm: { name: "", description: "", days: [[emptyDay(1)], [emptyDay(2)], [emptyDay(3)]] },
+      savedMessage: "",
+      selectedRoutineDay: nextSession.routineDay,
+      completed: [],
+      data: clone(SEED),
+    };
+
+    function find(list, id) { return list.find((item) => item.id === id); }
+    function categoryLabel(id) { return find(state.data.categories, id)?.label || ""; }
+    function periodFor(categoryId, dateIso) {
+      return state.data.periods.find((p) => p.categoryId === categoryId && p.startDate <= dateIso && p.endDate >= dateIso);
+    }
+
+    function render() {
+      const root = document.getElementById("app");
+      if (state.screen === "login" || !state.session) root.innerHTML = renderLogin();
+      else root.innerHTML = renderShell();
+      bind();
+    }
+
+    function renderLogin() {
+      const athlete = state.data.users.find((u) => u.role === "deportista" && u.categoryId === state.loginCategoryId);
+      const canEnter = state.loginMode === "pf" || Boolean(state.loginCategoryId);
+      return `
+        <div class="login">
+          <section class="login-hero">
+            <div class="brand-grid" style="position:absolute;inset:0;opacity:.6"></div>
+            <div style="position:relative;z-index:1;display:flex;align-items:center;gap:12px">
+              <span style="height:4px;width:40px;border-radius:99px;background:var(--yellow)"></span>
+              <span style="font-size:12px;font-weight:700;letter-spacing:.35em;text-transform:uppercase;color:var(--yellow)">Club Excelsior</span>
+            </div>
+            <div style="position:relative;z-index:1">
+              <img src="logo.png" alt="Excelsior" width="132" height="132" style="margin-bottom:32px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.45))" />
+              <h1 style="max-width:420px;font-size:48px;line-height:1.05;font-weight:800">Preparación física<br><span style="color:var(--yellow)">de alto nivel</span></h1>
+              <p style="margin-top:20px;max-width:420px;color:rgba(255,255,255,.7)">Planifica periodos, diseña rutinas y lleva a cada categoría del club al máximo rendimiento en la cancha.</p>
+            </div>
+            <div style="position:relative;z-index:1;display:flex;gap:12px">
+              ${[["10","Categorías"],["3","Periodos"],["100%","Seguimiento"]].map(([v,l]) => `
+                <div style="flex:1;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);border-radius:16px;padding:16px">
+                  <p style="font-size:24px;font-weight:800;color:var(--yellow)">${v}</p>
+                  <p style="margin-top:4px;font-size:12px;color:rgba(255,255,255,.6)">${l}</p>
+                </div>`).join("")}
+            </div>
+          </section>
+          <section class="login-form">
+            <div style="text-align:center;margin-bottom:28px" class="lg-only-hide">
+              <img src="logo.png" alt="Excelsior" width="92" height="92" />
+              <h1 style="margin-top:12px;font-size:24px;font-weight:800">EXCELSIOR</h1>
+              <p class="muted" style="font-size:14px">Preparación física · Voleibol</p>
+            </div>
+            <div class="card" style="width:100%;max-width:420px;border:0;box-shadow:0 0 0 1px rgba(255,255,255,.1)">
+              <h2 style="font-size:20px;font-weight:800">Iniciar sesión</h2>
+              <p class="muted" style="margin:6px 0 18px;font-size:14px">Selecciona tu perfil para entrar al panel correspondiente.</p>
+              <div class="role-grid">
+                <button class="role-btn ${state.loginMode === "pf" ? "active" : ""}" data-action="mode" data-mode="pf">
+                  <span class="role-ico">${ICONS.dumbbell}</span><span style="font-size:14px;font-weight:700">Preparador</span>
+                </button>
+                <button class="role-btn ${state.loginMode === "deportista" ? "active" : ""}" data-action="mode" data-mode="deportista">
+                  <span class="role-ico">${ICONS.user}</span><span style="font-size:14px;font-weight:700">Deportista</span>
+                </button>
+              </div>
+              ${state.loginMode === "pf" ? `
+                <div style="margin-top:18px;display:flex;gap:12px;align-items:center;border:1px solid rgba(61,123,255,.25);background:rgba(0,46,140,.25);border-radius:14px;padding:16px">
+                  <span style="width:40px;height:40px;border-radius:999px;display:grid;place-items:center;background:rgba(249,226,0,.15);color:var(--yellow)">${ICONS.shield}</span>
+                  <div><p style="font-weight:700">Carlos Mendoza</p><p class="muted" style="font-size:12px">Administrador de rutinas y periodos</p></div>
+                </div>` : `
+                <div style="margin-top:18px">
+                  <label class="label">Tu categoría</label>
+                  <select class="select" data-bind="loginCategoryId">
+                    <option value="">Selecciona categoría…</option>
+                    ${state.data.categories.map((c) => `<option value="${c.id}" ${state.loginCategoryId === c.id ? "selected" : ""}>${c.label}</option>`).join("")}
+                  </select>
+                  <p class="muted" style="min-height:16px;margin-top:8px;font-size:12px">
+                    ${athlete ? "Entrarás como " + athlete.name : state.loginCategoryId ? "Sin deportista demo en esta categoría: entrarás como invitado." : ""}
+                  </p>
+                </div>`}
+              <button class="btn" style="width:100%;height:48px;margin-top:18px;font-size:16px" data-action="enter" ${canEnter ? "" : "disabled"}>
+                Entrar al panel ${ICONS.arrow}
+              </button>
+            </div>
+            <p class="muted" style="margin-top:24px;font-size:12px">Maqueta de producto · datos en memoria</p>
+          </section>
+        </div>`;
+    }
+
+    function renderShell() {
+      const role = state.session.role;
+      const nav = role === "pf"
+        ? [{ id: "pf-dashboard", label: "Planificación", icon: ICONS.calendar }, { id: "pf-rutinas", label: "Rutinas", icon: ICONS.list }]
+        : [{ id: "atleta", label: "Mi entrenamiento", icon: ICONS.dumbbell }];
+      const category = state.session.categoryId ? categoryLabel(state.session.categoryId) : "";
+      return `
+        <div class="shell">
+          <aside class="sidebar">
+            <div style="height:96px;display:flex;align-items:center;gap:12px;padding:0 24px;position:relative">
+              <span style="position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,rgba(249,226,0,.6),rgba(255,22,31,.4),transparent)"></span>
+              <img src="logo.png" width="44" height="44" alt="Excelsior" />
+              <div><p style="font-weight:800">EXCELSIOR</p><p class="muted" style="font-size:11px">Preparación física</p></div>
+            </div>
+            <nav style="flex:1;padding:20px 12px;display:flex;flex-direction:column;gap:6px">
+              ${nav.map((item) => `<button class="nav-link ${state.screen === item.id ? "active" : ""}" data-nav="${item.id}">${item.icon}${item.label}</button>`).join("")}
+            </nav>
+            <div style="border-top:1px solid rgba(255,255,255,.05);padding:16px">
+              <div style="display:flex;gap:12px;align-items:center;background:rgba(255,255,255,.05);border-radius:14px;padding:12px;margin-bottom:12px">
+                <span style="width:36px;height:36px;border-radius:999px;display:grid;place-items:center;background:rgba(249,226,0,.15);color:var(--yellow)">${role === "pf" ? ICONS.dumbbell : ICONS.user}</span>
+                <div style="min-width:0"><p style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${state.session.name}</p><p class="muted" style="font-size:12px">${role === "pf" ? "Preparador Físico" : category}</p></div>
+              </div>
+              ${role === "pf" ? `<button class="btn btn-ghost" style="width:100%;justify-content:flex-start;margin-bottom:4px" data-action="reset">${ICONS.reset} Restaurar datos demo</button>` : ""}
+              <button class="btn btn-ghost btn-danger" style="width:100%;justify-content:flex-start" data-action="logout">${ICONS.logout} Cerrar sesión</button>
+            </div>
+          </aside>
+          <header class="topbar">
+            <div style="display:flex;align-items:center;gap:10px"><img src="logo.png" width="34" height="34" alt="" /><strong>EXCELSIOR</strong></div>
+            <button class="btn btn-ghost" data-action="logout">${ICONS.logout}</button>
+          </header>
+          <main class="content">${state.screen === "pf-rutinas" ? renderRoutines() : state.screen === "atleta" ? renderAthlete() : renderPF()}</main>
+          <nav class="bottom-nav" style="grid-template-columns:repeat(${nav.length},1fr)">
+            ${nav.map((item) => `<button class="${state.screen === item.id ? "active" : ""}" data-nav="${item.id}">${item.icon}${item.label}</button>`).join("")}
+          </nav>
+        </div>
+        ${state.plannerOpen ? renderPlanner() : ""}`;
+    }
+
+    function renderPF() {
+      const category = find(state.data.categories, state.pfCategoryId);
+      const periods = state.data.periods.filter((p) => p.categoryId === state.pfCategoryId);
+      const assignments = state.data.assignments.filter((a) => periods.some((p) => p.id === a.periodId));
+      const selectedPeriod = periodFor(state.pfCategoryId, state.selectedDate);
+      const selectedAssignment = selectedPeriod && state.data.assignments.find((a) => a.periodId === selectedPeriod.id);
+      const selectedRoutine = selectedAssignment && find(state.data.routines, selectedAssignment.routineId);
+      const cursor = state.calendarCursor;
+      const monthLabel = cursor.toLocaleDateString("es-CL", { month: "long", year: "numeric" });
+      const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+      const startWeekday = first.getDay();
+      const daysInMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
+      const cells = [];
+      for (let i = 0; i < startWeekday; i++) cells.push(null);
+      for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(cursor.getFullYear(), cursor.getMonth(), d));
+      return `
+        <div class="page">
+          <header style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:end">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <span style="height:4px;width:32px;border-radius:99px;background:var(--yellow)"></span>
+                <p style="font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--yellow)">Planificación por categoría</p>
+              </div>
+              <h1 style="font-size:30px;font-weight:800">Calendario de cargas</h1>
+              <p class="muted" style="margin-top:4px;font-size:14px">Analiza y planifica cada categoría de forma independiente.</p>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <select class="select" style="min-width:240px;height:42px" data-bind="pfCategoryId">
+                ${state.data.categories.map((c) => `<option value="${c.id}" ${c.id === state.pfCategoryId ? "selected" : ""}>${c.label}</option>`).join("")}
+              </select>
+              <button class="btn" data-action="open-planner">${ICONS.plus} Planificar carga</button>
+            </div>
+          </header>
+          <div class="card" style="background:rgba(0,46,140,.15);border-color:rgba(61,123,255,.2);display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:center">
+            <div><p style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sky)">Analizando</p><p style="font-size:18px;font-weight:800;margin-top:4px">${category.label}</p></div>
+            <div style="display:flex;gap:8px"><span class="badge">${periods.length} bloques</span><span class="badge">${assignments.length} rutinas asignadas</span></div>
+          </div>
+          <section class="grid-2">
+            <div class="card">
+              <h2 style="font-size:18px;font-weight:800">Calendario de ${category.label}</h2>
+              <p class="muted" style="font-size:13px;margin:4px 0 16px">Solo muestra la planificación de la categoría seleccionada.</p>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <button class="btn btn-outline" data-action="month" data-dir="-1">‹</button>
+                <strong style="text-transform:capitalize">${monthLabel}</strong>
+                <button class="btn btn-outline" data-action="month" data-dir="1">›</button>
+              </div>
+              <div class="cal" style="margin-bottom:6px">${["D","L","M","M","J","V","S"].map((d) => `<div class="muted" style="text-align:center;font-size:11px;font-weight:700">${d}</div>`).join("")}</div>
+              <div class="cal">
+                ${cells.map((date) => {
+                  if (!date) return `<div></div>`;
+                  const dateIso = iso(date);
+                  const period = periodFor(state.pfCategoryId, dateIso);
+                  const selected = dateIso === state.selectedDate;
+                  return `<button class="cal-cell ${selected ? "selected" : ""}" data-date="${dateIso}" style="${period ? `box-shadow:inset 0 -3px 0 ${period.color}` : ""}">${date.getDate()}</button>`;
+                }).join("")}
+              </div>
+              <div style="margin-top:16px;border:1px solid var(--border);background:rgba(255,255,255,.05);border-radius:14px;padding:16px">
+                <p class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em">${parseDate(state.selectedDate).toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long" })}</p>
+                ${selectedPeriod ? `<div style="margin-top:12px;display:flex;gap:12px"><span class="dot" style="margin-top:6px;background:${selectedPeriod.color}"></span><div><p style="font-weight:700">${selectedPeriod.name}</p><p class="muted" style="font-size:14px">${selectedRoutine?.name || "Sin rutina"}</p></div></div>` : `<p class="muted" style="margin-top:8px;font-size:14px">No hay carga planificada para esta fecha.</p>`}
+              </div>
+            </div>
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px">
+                <div><h2 style="font-size:18px;font-weight:800">Bloques de la categoría</h2><p class="muted" style="font-size:13px">Fechas, tipo y rutina aplicada en cada bloque.</p></div>
+                <button class="btn" style="height:36px" data-action="open-planner">${ICONS.plus} Planificar</button>
+              </div>
+              ${periods.length === 0 ? `<div style="border:1px dashed var(--border);border-radius:14px;padding:32px;text-align:center">${ICONS.calendar}<p style="margin-top:12px;font-weight:700">Sin planificación</p></div>` : periods.map((period) => {
+                const assignment = state.data.assignments.find((a) => a.periodId === period.id);
+                const routine = assignment && find(state.data.routines, assignment.routineId);
+                return `<div class="period-row" style="margin-bottom:10px"><span style="position:absolute;inset:0 auto 0 0;width:4px;background:${period.color}"></span>
+                  <div style="display:flex;justify-content:space-between;gap:12px">
+                    <div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><p style="font-weight:700">${period.name}</p><span class="badge">3 días de pesas</span></div>
+                    <p class="muted" style="margin-top:8px;font-size:14px">${formatDate(period.startDate)} — ${formatDate(period.endDate)}</p>
+                    <p style="margin-top:10px;display:flex;gap:8px;align-items:center;font-size:14px;color:var(--yellow)">${ICONS.dumbbell} ${routine?.name || "Rutina no disponible"}</p></div>
+                    <button class="btn btn-ghost btn-danger" data-action="delete-plan" data-id="${period.id}">${ICONS.trash}</button>
+                  </div></div>`;
+              }).join("")}
+            </div>
+          </section>
+        </div>`;
+    }
+
+    function renderPlanner() {
+      const category = find(state.data.categories, state.pfCategoryId);
+      const periods = state.data.periods.filter((p) => p.categoryId === state.pfCategoryId);
+      const overlap = state.plan.startDate && state.plan.endDate && periods.some((p) => state.plan.startDate <= p.endDate && state.plan.endDate >= p.startDate);
+      const steps = ["Fechas", "Tipo", "Rutina"];
+      return `
+        <div class="modal-bg" data-action="close-planner">
+          <div class="modal" onclick="event.stopPropagation()">
+            <h2 style="font-size:20px;font-weight:800">Planificar para ${category.label}</h2>
+            <p class="muted" style="font-size:14px;margin:4px 0 16px">Sigue el orden: fechas, tipo de periodo y rutina.</p>
+            <div class="grid-3" style="margin-bottom:18px">
+              ${steps.map((label, i) => {
+                const n = i + 1;
+                const active = state.plannerStep === n;
+                const done = state.plannerStep > n;
+                return `<div style="display:flex;align-items:center;gap:8px;border:1px solid ${active ? "var(--yellow)" : "var(--border)"};background:${active ? "rgba(249,226,0,.1)" : "transparent"};color:${active ? "var(--yellow)" : done ? "var(--sky)" : "var(--muted)"};border-radius:10px;padding:8px;font-size:12px"><span style="width:20px;height:20px;border-radius:99px;border:1px solid currentColor;display:grid;place-items:center;font-size:10px;font-weight:800">${done ? ICONS.check : n}</span>${label}</div>`;
+              }).join("")}
+            </div>
+            ${state.plannerStep === 1 ? `
+              <h3>1. Asigna las fechas</h3><p class="muted" style="font-size:14px;margin:6px 0 14px">Define el inicio y término del bloque.</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div><label class="label">Desde</label><input class="input" type="date" data-plan="startDate" value="${state.plan.startDate}"></div>
+                <div><label class="label">Hasta</label><input class="input" type="date" data-plan="endDate" value="${state.plan.endDate}"></div>
+              </div>
+              ${overlap ? `<p class="alert" style="margin-top:12px">Estas fechas se superponen con otro bloque de la categoría.</p>` : ""}
+            ` : state.plannerStep === 2 ? PERIOD_TYPES.map((type) => `
+              <button class="type-btn ${state.plan.type === type.value ? "active" : ""}" data-action="plan-type" data-type="${type.value}">
+                <span class="dot" style="background:${type.color}"></span>
+                <span style="flex:1"><strong>${type.label}</strong><br><span class="muted" style="font-size:12px">${type.description}</span></span>
+                ${state.plan.type === type.value ? ICONS.check : ""}
+              </button>`).join("") : state.data.routines.map((routine) => {
+                const items = state.data.routineExercises.filter((i) => i.routineId === routine.id);
+                return `<button class="routine-btn ${state.plan.routineId === routine.id ? "active" : ""}" data-action="plan-routine" data-id="${routine.id}">
+                  <span style="color:var(--yellow)">${ICONS.dumbbell}</span>
+                  <span style="flex:1"><strong>${routine.name}</strong><br><span class="muted" style="font-size:12px">Día 1: ${items.filter(i=>i.dayNumber===1).length} · Día 2: ${items.filter(i=>i.dayNumber===2).length} · Día 3: ${items.filter(i=>i.dayNumber===3).length} ejercicios</span></span>
+                  ${state.plan.routineId === routine.id ? ICONS.check : ""}
+                </button>`;
+              }).join("")}
+            <div style="display:flex;justify-content:space-between;margin-top:18px">
+              <button class="btn btn-outline" data-action="planner-back" ${state.plannerStep === 1 ? "disabled" : ""}>Atrás</button>
+              ${state.plannerStep < 3
+                ? `<button class="btn" data-action="planner-next" ${(state.plannerStep === 1 && (!state.plan.startDate || !state.plan.endDate || state.plan.endDate < state.plan.startDate || overlap)) || (state.plannerStep === 2 && !state.plan.type) ? "disabled" : ""}>Continuar ${ICONS.arrow}</button>`
+                : `<button class="btn" data-action="save-plan" ${state.plan.routineId ? "" : "disabled"}>${ICONS.check} Guardar planificación</button>`}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderRoutines() {
+      const form = state.routineForm;
+      return `
+        <div class="page">
+          <header>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="height:4px;width:32px;border-radius:99px;background:var(--red)"></span>
+              <p style="font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--red)">Biblioteca de fuerza</p>
+            </div>
+            <h1 style="font-size:30px;font-weight:800">Rutinas de tres días</h1>
+            <p class="muted" style="margin-top:4px">Cada rutina contiene exactamente tres días de pesas con ejercicios independientes.</p>
+          </header>
+          <div class="grid-2" style="grid-template-columns:1.2fr .8fr">
+            <div class="card">
+              <h2 style="font-size:18px;font-weight:800">Nueva rutina</h2>
+              <p class="muted" style="font-size:13px;margin:4px 0 16px">Define el objetivo y completa los tres días antes de guardar.</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+                <div><label class="label">Nombre</label><input class="input" data-routine="name" value="${form.name}" placeholder="Ej. Fuerza general Sub-20"></div>
+                <div><label class="label">Objetivo</label><input class="input" data-routine="description" value="${form.description}" placeholder="Ej. Desarrollo de fuerza máxima"></div>
+              </div>
+              <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+                ${form.days.map((items, dayIndex) => `
+                  <section style="border:1px solid var(--border);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.04);border-top:3px solid ${DAY_ACCENTS[dayIndex]}">
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--border)">
+                      <div><p style="font-weight:800;font-size:14px">Día ${dayIndex + 1}</p><p class="muted" style="font-size:10px">${items.length} ejercicios</p></div>
+                      <button class="btn btn-ghost" data-action="add-ex" data-day="${dayIndex}">${ICONS.plus}</button>
+                    </div>
+                    <div style="padding:12px;display:flex;flex-direction:column;gap:10px">
+                      ${items.map((item, itemIndex) => `
+                        <div style="border:1px solid var(--border);border-radius:12px;padding:12px;background:rgba(5,13,34,.4)">
+                          <div style="display:flex;gap:8px;margin-bottom:10px">
+                            <span style="width:24px;height:24px;border-radius:99px;display:grid;place-items:center;font-size:10px;font-weight:800;background:${DAY_ACCENTS[dayIndex]};color:${dayIndex === 1 ? "#08122e" : "#fff"}">${itemIndex + 1}</span>
+                            <select class="select" style="height:36px" data-ex="${dayIndex}:${itemIndex}:exerciseId">
+                              <option value="">Ejercicio</option>
+                              ${state.data.exercises.map((ex) => `<option value="${ex.id}" ${item.exerciseId === ex.id ? "selected" : ""}>${ex.name}</option>`).join("")}
+                            </select>
+                            ${items.length > 1 ? `<button class="btn btn-ghost btn-danger" data-action="remove-ex" data-day="${dayIndex}" data-item="${itemIndex}">${ICONS.trash}</button>` : ""}
+                          </div>
+                          <div class="grid-3">
+                            ${[["sets","Series"],["reps","Reps"],["restSeconds","Pausa"]].map(([key,label]) => `
+                              <div><label class="label" style="font-size:10px">${label}</label><input class="input" style="height:36px" type="number" min="1" value="${item[key]}" data-ex="${dayIndex}:${itemIndex}:${key}"></div>`).join("")}
+                          </div>
+                        </div>`).join("")}
+                      <button class="btn btn-outline" style="width:100%;border-style:dashed" data-action="add-ex" data-day="${dayIndex}">${ICONS.plus} Agregar ejercicio</button>
+                    </div>
+                  </section>`).join("")}
+              </div>
+              ${state.savedMessage ? `<p class="toast" style="margin-top:16px">${state.savedMessage}</p>` : ""}
+              <button class="btn" style="margin-top:16px" data-action="save-routine">${ICONS.dumbbell} Guardar rutina de 3 días</button>
+            </div>
+            <section>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div><h2 style="font-size:18px;font-weight:800">Rutinas disponibles</h2><p class="muted" style="font-size:13px">${state.data.routines.length} rutinas para asignar</p></div>
+                <span class="badge">${state.data.exercises.length} ejercicios base</span>
+              </div>
+              ${[...state.data.routines].reverse().map((routine) => {
+                const items = state.data.routineExercises.filter((i) => i.routineId === routine.id);
+                const totalSets = items.reduce((s, i) => s + i.sets, 0);
+                const duration = Math.max(15, Math.round(items.reduce((s, i) => s + i.sets * (i.reps * 4 + i.restSeconds), 0) / 60));
+                return `<div class="card" style="margin-bottom:12px">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                    <span style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(249,226,0,.12);color:var(--yellow)">${ICONS.dumbbell}</span>
+                    <span class="badge">3 días</span>
+                  </div>
+                  <h3 style="font-size:18px">${routine.name}</h3>
+                  <p class="muted" style="font-size:13px;margin:4px 0 12px">${routine.description}</p>
+                  <div class="grid-3" style="margin-bottom:12px">
+                    ${[[ICONS.layers, items.length, "ejercicios"],[ICONS.repeat, totalSets, "series"],[ICONS.clock, duration + "m", "total"]].map(([ico,v,l]) => `<div class="stat">${ico}<p style="font-weight:700">${v}</p><p class="muted" style="font-size:10px">${l}</p></div>`).join("")}
+                  </div>
+                  <div class="grid-3">
+                    ${[1,2,3].map((day, index) => {
+                      const count = items.filter((i) => i.dayNumber === day).length;
+                      return `<div style="border:1px solid var(--border);border-top:2px solid ${DAY_ACCENTS[index]};border-radius:10px;padding:8px"><p style="font-size:12px;font-weight:800">Día ${day}</p><p class="muted" style="font-size:10px">${count} ejercicios</p></div>`;
+                    }).join("")}
+                  </div>
+                </div>`;
+              }).join("")}
+            </section>
+          </div>
+        </div>`;
+    }
+
+    function renderAthlete() {
+      const categoryId = state.session.categoryId;
+      const category = find(state.data.categories, categoryId);
+      const period = periodFor(categoryId, todayIso);
+      const assignment = period && state.data.assignments.find((a) => a.periodId === period.id);
+      const routine = assignment && find(state.data.routines, assignment.routineId);
+      const todayRoutineDay = ROUTINE_DAY_BY_WEEKDAY[today.getDay()] || null;
+      const items = routine ? state.data.routineExercises.filter((i) => i.routineId === routine.id && i.dayNumber === state.selectedRoutineDay).sort((a,b) => a.order - b.order) : [];
+      const doneCount = items.filter((i) => state.completed.includes(i.id)).length;
+      const progress = items.length ? Math.round((doneCount / items.length) * 100) : 0;
+      const minutes = Math.round(items.reduce((s, i) => s + i.sets * (i.reps * 4 + i.restSeconds), 0) / 60);
+      const isTodaySession = state.selectedRoutineDay === todayRoutineDay;
+      const week = Array.from({ length: 7 }, (_, offset) => {
+        const date = new Date(today); date.setDate(today.getDate() - today.getDay() + offset);
+        const dateIso = iso(date);
+        const datePeriod = periodFor(categoryId, dateIso);
+        const hasPlan = datePeriod && state.data.assignments.some((a) => a.periodId === datePeriod.id);
+        const routineDay = ROUTINE_DAY_BY_WEEKDAY[offset] || null;
+        return { day: DAY_NAMES[offset].slice(0,3), date: date.getDate(), isToday: offset === today.getDay(), routineDay, hasRoutine: Boolean(hasPlan && routineDay) };
+      });
+      return `
+        <div class="page" style="max-width:880px">
+          <header style="display:flex;justify-content:space-between;gap:16px">
+            <div>
+              <p class="muted" style="text-transform:capitalize">${today.toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long" })}</p>
+              <h1 style="font-size:30px;font-weight:800;margin-top:4px">Hola, ${state.session.name.split(" ")[0]}</h1>
+              <p style="margin-top:8px;display:inline-flex;border-radius:999px;background:rgba(0,46,140,.35);color:var(--sky);padding:4px 12px;font-size:12px;font-weight:700;border:1px solid rgba(61,123,255,.3)">${category?.label || ""}</p>
+            </div>
+            <div style="width:44px;height:44px;border-radius:16px;display:grid;place-items:center;background:rgba(255,22,31,.15);color:var(--red);border:1px solid rgba(255,22,31,.3)">${ICONS.flame}</div>
+          </header>
+          ${period ? `
+            <div class="card" style="position:relative;overflow:hidden;border:0;background:linear-gradient(120deg,#002e8c 0%,#0a1735 58%,#1c0709 100%)">
+              <span class="brand-grid" style="position:absolute;inset:0;opacity:.5"></span>
+              <span style="position:absolute;inset:0 auto 0 0;width:6px;background:${period.color}"></span>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;gap:16px">
+                <div>
+                  <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><span class="badge">Periodo actual</span><span style="font-size:12px;color:rgba(255,255,255,.6)">hasta el ${parseDate(period.endDate).toLocaleDateString("es-CL", { day: "numeric", month: "short" })}</span></div>
+                  <p style="font-size:28px;font-weight:800">${period.name}</p>
+                  <p style="margin-top:4px;color:rgba(255,255,255,.65);font-size:14px">Mantén la constancia y respeta los descansos.</p>
+                </div>
+                <span style="color:var(--yellow)">${ICONS.trophy}</span>
+              </div>
+            </div>` : `<div class="card"><p style="font-weight:700">Sin planificación activa</p><p class="muted" style="margin-top:6px;font-size:14px">Tu preparador todavía no asignó un bloque de carga a ${category?.label} para esta fecha.</p></div>`}
+          ${routine ? `
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:6px">
+                <p style="font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--yellow);display:flex;gap:8px;align-items:center">${ICONS.dumbbell} ${isTodaySession ? "Rutina de hoy" : "Próxima sesión"}</p>
+                <span class="muted" style="font-size:12px">${doneCount}/${items.length} completados</span>
+              </div>
+              <h2 style="font-size:22px;font-weight:800">${routine.name}</h2>
+              <p class="muted" style="margin:6px 0 16px;font-size:14px">${isTodaySession ? routine.description : `Hoy toca descanso. Tu próxima sesión es el ${DAY_NAMES[nextSession.date.getDay()].toLowerCase()} ${nextSession.date.getDate()}.`}</p>
+              <div class="grid-3" style="margin-bottom:16px">
+                ${[1,2,3].map((day) => {
+                  const count = state.data.routineExercises.filter((i) => i.routineId === routine.id && i.dayNumber === day).length;
+                  return `<button class="day-tab ${state.selectedRoutineDay === day ? "active" : ""}" data-action="select-day" data-day="${day}">
+                    <strong style="color:${state.selectedRoutineDay === day ? "var(--yellow)" : "inherit"}">Día ${day}</strong>
+                    <span class="muted" style="display:block;font-size:10px">${WEEKDAY_LABEL[day]}${day === todayRoutineDay ? " · hoy" : ""}</span>
+                    <span class="muted" style="display:block;font-size:10px">${count} ejercicios</span>
+                  </button>`;
+                }).join("")}
+              </div>
+              <div class="grid-3" style="margin-bottom:16px">
+                ${[[ICONS.clock, minutes + " min", "Duración", "#3d7bff"],[ICONS.dumbbell, items.length, "Ejercicios", "#f9e200"],[ICONS.flame, period?.type === "descarga" ? "Media" : "Alta", "Intensidad", "#ff161f"]].map(([ico,v,l,c]) => `<div class="stat"><div style="color:${c}">${ico}</div><p style="font-weight:800">${v}</p><p class="muted" style="font-size:10px">${l}</p></div>`).join("")}
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span class="muted">Progreso del día</span><strong style="color:var(--yellow)">${progress}%</strong></div>
+              <div style="height:10px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:16px"><div style="height:100%;width:${progress}%;background:linear-gradient(90deg,#ff161f,#ff8a00,#f9e200)"></div></div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                ${items.map((item, index) => {
+                  const exercise = find(state.data.exercises, item.exerciseId);
+                  const done = state.completed.includes(item.id);
+                  return `<button class="ex-row ${done ? "done" : ""}" data-action="toggle-ex" data-id="${item.id}">
+                    <span style="width:36px;height:36px;border-radius:99px;display:grid;place-items:center;font-weight:800;border:1px solid ${done ? "var(--yellow)" : "rgba(61,123,255,.3)"};background:${done ? "var(--yellow)" : "rgba(0,46,140,.4)"};color:${done ? "#08122e" : "var(--sky)"}">${done ? ICONS.check : index + 1}</span>
+                    <span style="flex:1;min-width:0"><strong style="display:block;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${exercise?.name || ""}</strong>
+                    <span class="muted" style="font-size:12px;display:flex;gap:12px;margin-top:4px">${ICONS.repeat} ${item.sets} series × ${item.reps} reps ${ICONS.timer} ${item.restSeconds}s descanso</span></span>${ICONS.chevron}
+                  </button>`;
+                }).join("")}
+              </div>
+              ${progress === 100 ? `<div style="margin-top:16px;background:var(--yellow);color:#08122e;border-radius:14px;padding:16px;display:flex;gap:10px;align-items:center;font-weight:800">${ICONS.party} ¡Día ${state.selectedRoutineDay} completado! Buen trabajo.</div>` : ""}
+            </div>` : ""}
+          <div class="card">
+            <h2 style="display:flex;gap:8px;align-items:center">${ICONS.calendar} Esta semana</h2>
+            <p class="muted" style="font-size:13px;margin:4px 0 14px">Los días de pesas son lunes, miércoles y viernes.</p>
+            <div class="week">
+              ${week.map((day) => `<div class="week-cell ${day.isToday ? "today" : ""}">
+                <span class="muted" style="font-size:10px;text-transform:uppercase">${day.day}</span>
+                <strong style="margin:4px 0">${day.date}</strong>
+                ${day.routineDay ? `<span class="muted" style="font-size:9px;font-weight:700">Día ${day.routineDay}</span>` : ""}
+                <span style="width:6px;height:6px;border-radius:99px;margin-top:6px;background:${day.hasRoutine ? "var(--red)" : "rgba(255,255,255,.15)"}"></span>
+              </div>`).join("")}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function bind() {
+      document.querySelectorAll("[data-action]").forEach((el) => {
+        el.addEventListener("click", (event) => {
+          const action = el.getAttribute("data-action");
+          if (action === "mode") state.loginMode = el.getAttribute("data-mode");
+          if (action === "enter") enter();
+          if (action === "logout") { state.session = null; state.screen = "login"; }
+          if (action === "reset") { state.data = clone(SEED); state.savedMessage = "Datos demo restaurados."; }
+          if (action === "open-planner") { state.plannerOpen = true; state.plannerStep = 1; state.plan = { startDate: "", endDate: "", type: "", routineId: "" }; }
+          if (action === "close-planner") state.plannerOpen = false;
+          if (action === "planner-back") state.plannerStep = Math.max(1, state.plannerStep - 1);
+          if (action === "planner-next") state.plannerStep += 1;
+          if (action === "plan-type") state.plan.type = el.getAttribute("data-type");
+          if (action === "plan-routine") state.plan.routineId = el.getAttribute("data-id");
+          if (action === "save-plan") savePlan();
+          if (action === "delete-plan") {
+            const id = el.getAttribute("data-id");
+            state.data.periods = state.data.periods.filter((p) => p.id !== id);
+            state.data.assignments = state.data.assignments.filter((a) => a.periodId !== id);
+          }
+          if (action === "month") {
+            const dir = Number(el.getAttribute("data-dir"));
+            state.calendarCursor = new Date(state.calendarCursor.getFullYear(), state.calendarCursor.getMonth() + dir, 1);
+          }
+          if (action === "add-ex") {
+            const day = Number(el.getAttribute("data-day"));
+            state.routineForm.days[day].push(emptyDay(day + 1));
+          }
+          if (action === "remove-ex") {
+            const day = Number(el.getAttribute("data-day"));
+            const item = Number(el.getAttribute("data-item"));
+            state.routineForm.days[day].splice(item, 1);
+          }
+          if (action === "save-routine") saveRoutine();
+          if (action === "select-day") state.selectedRoutineDay = Number(el.getAttribute("data-day"));
+          if (action === "toggle-ex") {
+            const id = el.getAttribute("data-id");
+            state.completed = state.completed.includes(id) ? state.completed.filter((x) => x !== id) : [...state.completed, id];
+          }
+          render();
+          event.stopPropagation();
+        });
+      });
+      document.querySelectorAll("[data-nav]").forEach((el) => {
+        el.addEventListener("click", () => { state.screen = el.getAttribute("data-nav"); render(); });
+      });
+      document.querySelectorAll("[data-bind]").forEach((el) => {
+        el.addEventListener("change", () => { state[el.getAttribute("data-bind")] = el.value; render(); });
+      });
+      document.querySelectorAll("[data-plan]").forEach((el) => {
+        el.addEventListener("change", () => { state.plan[el.getAttribute("data-plan")] = el.value; render(); });
+      });
+      document.querySelectorAll("[data-routine]").forEach((el) => {
+        el.addEventListener("input", () => { state.routineForm[el.getAttribute("data-routine")] = el.value; });
+      });
+      document.querySelectorAll("[data-ex]").forEach((el) => {
+        el.addEventListener("change", () => {
+          const [day, item, field] = el.getAttribute("data-ex").split(":");
+          const value = field === "exerciseId" ? el.value : Math.max(1, Number(el.value));
+          state.routineForm.days[Number(day)][Number(item)][field] = value;
+          if (field === "exerciseId") render();
+        });
+      });
+      document.querySelectorAll("[data-date]").forEach((el) => {
+        el.addEventListener("click", () => { state.selectedDate = el.getAttribute("data-date"); render(); });
+      });
+    }
+
+    function enter() {
+      if (state.loginMode === "pf") {
+        state.session = { role: "pf", name: "Carlos Mendoza", categoryId: null };
+        state.screen = "pf-dashboard";
+        return;
+      }
+      if (!state.loginCategoryId) return;
+      const athlete = state.data.users.find((u) => u.role === "deportista" && u.categoryId === state.loginCategoryId);
+      state.session = { role: "deportista", name: athlete?.name || "Deportista", categoryId: state.loginCategoryId };
+      state.screen = "atleta";
+      state.completed = [];
+      state.selectedRoutineDay = nextSession.routineDay;
+    }
+
+    function savePlan() {
+      const type = PERIOD_TYPES.find((t) => t.value === state.plan.type);
+      const periodId = uid("per");
+      state.data.periods.push({
+        id: periodId, name: type.label, type: type.value, categoryId: state.pfCategoryId,
+        startDate: state.plan.startDate, endDate: state.plan.endDate, color: type.color,
+      });
+      state.data.assignments.push({ id: uid("asg"), routineId: state.plan.routineId, periodId });
+      state.plannerOpen = false;
+    }
+
+    function saveRoutine() {
+      const form = state.routineForm;
+      const items = form.days.flat();
+      if (!form.name.trim() || form.days.some((d) => !d.length) || items.some((i) => !i.exerciseId)) return;
+      const routineId = uid("rut");
+      state.data.routines.push({ id: routineId, name: form.name.trim(), description: form.description.trim() });
+      items.forEach((item, index) => {
+        state.data.routineExercises.push({
+          id: uid("re"), routineId, exerciseId: item.exerciseId, dayNumber: item.dayNumber,
+          sets: item.sets, reps: item.reps, restSeconds: item.restSeconds, order: index + 1,
+        });
+      });
+      state.savedMessage = `“${form.name.trim()}” se guardó con sus tres días.`;
+      state.routineForm = { name: "", description: "", days: [[emptyDay(1)], [emptyDay(2)], [emptyDay(3)]] };
+    }
+
+    render();
+  </script>
+</body>
+</html>
