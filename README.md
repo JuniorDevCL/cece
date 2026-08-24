@@ -14,10 +14,12 @@ MVP del club Excelsior con Next.js, Auth.js, Vercel Postgres (Neon) y despliegue
 1. Copia `.env.example` a `.env.local` y completa:
 
 ```env
-POSTGRES_URL="postgresql://..."
+DATABASE_URL="postgresql://..."
 AUTH_SECRET="genera-un-secreto-largo"
 AUTH_URL="http://localhost:3000"
 ```
+
+> Vercel + Neon crea `DATABASE_URL` automáticamente al conectar Storage. La app la usa directamente.
 
 2. Instala dependencias:
 
@@ -51,7 +53,7 @@ npm run dev
 1. Conecta el repo `JuniorDevCL/cece`
 2. En **Storage → Postgres**, crea una base Neon (Vercel Postgres)
 3. En **Settings → Environment Variables**, agrega:
-   - `POSTGRES_URL` (automática al conectar storage)
+   - `DATABASE_URL` (automática al conectar Neon en Storage)
    - `AUTH_SECRET` (genera uno seguro)
    - `AUTH_URL` = `https://tu-dominio.vercel.app`
 4. Redeploy

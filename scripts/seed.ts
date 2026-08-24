@@ -23,8 +23,8 @@ import {
 const DEFAULT_PASSWORD = "excelsior2026";
 
 async function main() {
-  if (!process.env.POSTGRES_URL) {
-    throw new Error("Define POSTGRES_URL antes de ejecutar el seed.");
+  if (!process.env.DATABASE_URL && !process.env.POSTGRES_URL) {
+    throw new Error("Define DATABASE_URL antes de ejecutar el seed.");
   }
 
   const db = getDb();
