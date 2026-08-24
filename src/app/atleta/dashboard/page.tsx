@@ -8,8 +8,10 @@ import {
   ChevronRight,
   Clock3,
   Dumbbell,
+  ExternalLink,
   Flame,
   PartyPopper,
+  PlayCircle,
   Repeat2,
   TimerReset,
   Trophy,
@@ -19,6 +21,7 @@ import { useTrainingData } from "@/contexts/data-context";
 import { getCategoryById } from "@/lib/mockData";
 import type { RoutineDayNumber } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { youtubeEmbedUrl, youtubeWatchUrl } from "@/lib/youtube";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +31,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const DAY_NAMES = [
   "Domingo",
@@ -84,6 +95,7 @@ export default function AtletaDashboardPage() {
   const [selectedDay, setSelectedDay] = useState<RoutineDayNumber>(
     nextSession?.routineDay ?? 1
   );
+  const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
 
   const todayIso = toLocalIso(today);
   const category = session?.categoryId
@@ -120,6 +132,19 @@ export default function AtletaDashboardPage() {
     ) / 60
   );
   const isTodaySession = selectedDay === todayRoutineDay;
+  const activeItem = routineItems.find((item) => item.id === activeExerciseId);
+  const activeExercise = activeItem
+    ? exercises.find((value) => value.id === activeItem.exerciseId)
+    : undefined;
+  const activeEmbed = activeExercise
+    ? youtubeEmbedUrl(activeExercise.youtubeUrl)
+    : null;
+  const activeWatch = activeExercise
+    ? youtubeWatchUrl(activeExercise.youtubeUrl)
+    : null;
+  const activeDone = activeItem
+    ? completed.includes(activeItem.id)
+    : false;
 
   const weekPlan = Array.from({ length: 7 }, (_, offset) => {
     const date = new Date(today);
@@ -353,7 +378,7 @@ export default function AtletaDashboardPage() {
                         ? "border-brand-yellow/40 bg-brand-yellow/10"
                         : "border-white/8 bg-white/5 hover:border-brand-sky/40 hover:bg-white/8"
                     )}
-                    onClick={() => toggleExercise(item.id)}
+                    onClick={() => setActiveExerciseId(item.id)}
                   >
                     <span
                       className={cn(
@@ -383,6 +408,12 @@ export default function AtletaDashboardPage() {
                           <TimerReset className="size-3" />
                           {item.restSeconds}s descanso
                         </span>
+                        {exercise?.youtubeUrl && (
+                          <span className="flex items-center gap-1 text-brand-sky">
+                            <PlayCircle className="size-3" />
+                            Video
+                          </span>
+                        )}
                       </span>
                     </span>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
@@ -390,6 +421,80 @@ export default function AtletaDashboardPage() {
                 );
               })}
             </div>
+
+            <Dialog
+              open={Boolean(activeExerciseId)}
+              onOpenChange={(open) => {
+                if (!open) setActiveExerciseId(null);
+              }}
+            >
+              <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>{activeExercise?.name}</DialogTitle>
+                  <DialogDescription>
+                    {activeExercise?.description ||
+                      "Revisa la técnica antes de ejecutar el ejercicio."}
+                  </DialogDescription>
+                </DialogHeader>
+
+                {activeItem && (
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <span className="rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10">
+                      {activeItem.sets} series × {activeItem.reps} reps
+                    </span>
+                    <span className="rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10">
+                      {activeItem.restSeconds}s descanso
+                    </span>
+                    {activeExercise?.muscleGroup && (
+                      <span className="rounded-full bg-white/5 px-3 py-1 ring-1 ring-white/10">
+                        {activeExercise.muscleGroup}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {activeEmbed ? (
+                  <div className="overflow-hidden rounded-xl border border-white/10 bg-black">
+                    <div className="aspect-video">
+                      <iframe
+                        src={activeEmbed}
+                        title={`Video de ${activeExercise?.name}`}
+                        className="size-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="rounded-xl border border-dashed border-white/15 p-4 text-sm text-muted-foreground">
+                    Este ejercicio todavía no tiene video de referencia.
+                  </p>
+                )}
+
+                <DialogFooter className="sm:justify-between">
+                  {activeWatch ? (
+                    <Button variant="outline" asChild>
+                      <a href={activeWatch} target="_blank" rel="noreferrer">
+                        <ExternalLink /> Abrir en YouTube
+                      </a>
+                    </Button>
+                  ) : (
+                    <span />
+                  )}
+                  {activeItem && (
+                    <Button
+                      onClick={() => {
+                        toggleExercise(activeItem.id);
+                        setActiveExerciseId(null);
+                      }}
+                    >
+                      <Check />
+                      {activeDone ? "Desmarcar" : "Marcar completado"}
+                    </Button>
+                  )}
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             {progress === 100 && (
               <div className="mt-5 flex items-center gap-3 rounded-xl bg-brand-yellow p-4 text-[#08122e]">

@@ -24,6 +24,7 @@ const navByRole = {
   pf: [
     { href: "/pf/dashboard", label: "Planificación", icon: CalendarDays },
     { href: "/pf/rutinas", label: "Rutinas", icon: ClipboardList },
+    { href: "/pf/ejercicios", label: "Ejercicios", icon: Dumbbell },
   ],
   deportista: [
     { href: "/atleta/dashboard", label: "Mi entrenamiento", icon: Dumbbell },

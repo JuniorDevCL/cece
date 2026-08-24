@@ -16,6 +16,7 @@ import {
   trainingPeriods as initialPeriods,
 } from "@/lib/mockData";
 import type {
+  Exercise,
   Routine,
   RoutineAssignment,
   RoutineDayNumber,
@@ -24,13 +25,14 @@ import type {
   TrainingPeriod,
 } from "@/lib/types";
 
-const STORAGE_KEY = "cece-training-data-v3";
+const STORAGE_KEY = "cece-training-data-v4";
 
 interface TrainingState {
   periods: TrainingPeriod[];
   routines: Routine[];
   routineExercises: RoutineExercise[];
   assignments: RoutineAssignment[];
+  exercises: Exercise[];
 }
 
 export interface RoutineExerciseDraft {
@@ -49,13 +51,20 @@ export interface TrainingPlanDraft {
   routineId: string;
 }
 
+export interface ExerciseDraft {
+  name: string;
+  muscleGroup: string;
+  description: string;
+  youtubeUrl: string;
+}
+
 interface DataContextValue extends TrainingState {
-  exercises: typeof initialExercises;
   addRoutine: (
     routine: Pick<Routine, "name" | "description">,
     items: RoutineExerciseDraft[],
     createdById: string
   ) => void;
+  addExercise: (exercise: ExerciseDraft) => void;
   createPlan: (plan: TrainingPlanDraft) => void;
   deletePlan: (periodId: string) => void;
   resetData: () => void;
@@ -66,6 +75,7 @@ const initialState: TrainingState = {
   routines: initialRoutines,
   routineExercises: initialRoutineExercises,
   assignments: initialAssignments,
+  exercises: initialExercises,
 };
 
 function loadTrainingState(): TrainingState {
@@ -73,7 +83,14 @@ function loadTrainingState(): TrainingState {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (!saved) return initialState;
   try {
-    return JSON.parse(saved) as TrainingState;
+    const parsed = JSON.parse(saved) as Partial<TrainingState>;
+    return {
+      periods: parsed.periods ?? initialPeriods,
+      routines: parsed.routines ?? initialRoutines,
+      routineExercises: parsed.routineExercises ?? initialRoutineExercises,
+      assignments: parsed.assignments ?? initialAssignments,
+      exercises: parsed.exercises ?? initialExercises,
+    };
   } catch {
     localStorage.removeItem(STORAGE_KEY);
     return initialState;
@@ -135,6 +152,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const addExercise = useCallback((exercise: ExerciseDraft) => {
+    const next: Exercise = {
+      id: makeId("ex"),
+      name: exercise.name.trim(),
+      muscleGroup: exercise.muscleGroup.trim(),
+      description: exercise.description.trim(),
+      youtubeUrl: exercise.youtubeUrl.trim(),
+    };
+    setState((current) => ({
+      ...current,
+      exercises: [...current.exercises, next],
+    }));
+  }, []);
+
   const createPlan = useCallback(
     (plan: TrainingPlanDraft) => {
       const periodId = makeId("per");
@@ -182,13 +213,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       ...state,
-      exercises: initialExercises,
       addRoutine,
+      addExercise,
       createPlan,
       deletePlan,
       resetData,
     }),
-    [state, addRoutine, createPlan, deletePlan, resetData]
+    [state, addRoutine, addExercise, createPlan, deletePlan, resetData]
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

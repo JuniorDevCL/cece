@@ -38,6 +38,8 @@ export interface Exercise {
   name: string;
   muscleGroup: string;
   description: string;
+  /** Link de YouTube con la técnica del ejercicio */
+  youtubeUrl: string;
 }
 
 export interface Routine {
