@@ -30,21 +30,34 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const result = await signIn("credentials", {
-      email: email.trim().toLowerCase(),
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn("credentials", {
+        email: email.trim().toLowerCase(),
+        password,
+        redirect: false,
+      });
 
-    setLoading(false);
+      setLoading(false);
 
-    if (result?.error) {
-      setError("Email o contraseña incorrectos.");
-      return;
+      if (result?.error) {
+        if (result.error === "Configuration") {
+          setError(
+            "Auth no está configurado en el servidor. Falta AUTH_SECRET o AUTH_URL en Vercel."
+          );
+        } else {
+          setError("Email o contraseña incorrectos.");
+        }
+        return;
+      }
+
+      router.refresh();
+      router.push("/");
+    } catch {
+      setLoading(false);
+      setError(
+        "No se pudo conectar con el login. Revisa AUTH_SECRET y AUTH_URL en Vercel."
+      );
     }
-
-    router.refresh();
-    router.push("/");
   }
 
   return (
