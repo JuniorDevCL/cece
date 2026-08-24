@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Dumbbell, ShieldCheck, UserRound } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
-import { categories, users } from "@/lib/mockData";
+import { ArrowRight, Dumbbell, LoaderCircle, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
@@ -16,49 +15,36 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-type LoginMode = "pf" | "deportista";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginAsPF, loginAsAthlete } = useAuth();
-  const [mode, setMode] = useState<LoginMode>("pf");
-  const [categoryId, setCategoryId] = useState<string>("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const pfUser = useMemo(() => users.find((user) => user.role === "pf")!, []);
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
 
-  const athleteForCategory = useMemo(() => {
-    if (!categoryId) return null;
-    return (
-      users.find(
-        (user) => user.role === "deportista" && user.categoryId === categoryId
-      ) ?? null
-    );
-  }, [categoryId]);
+    const result = await signIn("credentials", {
+      email: email.trim().toLowerCase(),
+      password,
+      redirect: false,
+    });
 
-  function handleEnter() {
-    if (mode === "pf") {
-      loginAsPF(pfUser.id, pfUser.name);
-      router.push("/pf/dashboard");
+    setLoading(false);
+
+    if (result?.error) {
+      setError("Email o contraseña incorrectos.");
       return;
     }
 
-    if (!categoryId) return;
-
-    loginAsAthlete(
-      athleteForCategory?.id ?? `guest-${categoryId}`,
-      athleteForCategory?.name ?? "Deportista",
-      categoryId
-    );
-    router.push("/atleta/dashboard");
+    router.refresh();
+    router.push("/");
   }
 
   return (
@@ -92,15 +78,15 @@ export default function LoginPage() {
             <span className="block text-brand-yellow">de alto nivel</span>
           </h1>
           <p className="mt-5 max-w-md text-base text-white/70">
-            Planifica periodos, diseña rutinas y lleva a cada categoría del club
-            al máximo rendimiento en la cancha.
+            Cada deportista tiene su cuenta. El preparador planifica cargas y
+            revisa asistencia desde la nube.
           </p>
         </div>
 
         <div className="relative z-10 flex gap-3">
           {[
             { value: "10", label: "Categorías" },
-            { value: "3", label: "Periodos" },
+            { value: "3", label: "Días de pesas" },
             { value: "100%", label: "Seguimiento" },
           ].map((item) => (
             <div
@@ -136,107 +122,88 @@ export default function LoginPage() {
           <CardHeader>
             <CardTitle className="text-xl">Iniciar sesión</CardTitle>
             <CardDescription>
-              Selecciona tu perfil para entrar al panel correspondiente.
+              Ingresa con tu cuenta de preparador o deportista.
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="flex flex-col gap-5">
-            <div className="grid grid-cols-2 gap-2.5">
-              {[
-                { value: "pf" as const, label: "Preparador", icon: Dumbbell },
-                {
-                  value: "deportista" as const,
-                  label: "Deportista",
-                  icon: UserRound,
-                },
-              ].map((option) => {
-                const active = mode === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setMode(option.value)}
-                    className={cn(
-                      "flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border-2 p-3 transition-all",
-                      active
-                        ? "border-brand-yellow bg-brand-yellow/10 text-foreground"
-                        : "border-border bg-muted/20 text-muted-foreground hover:border-brand-sky/60 hover:text-foreground"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "flex size-10 items-center justify-center rounded-full transition-colors",
-                        active
-                          ? "bg-brand-yellow text-[#08122e]"
-                          : "bg-muted text-muted-foreground"
-                      )}
-                    >
-                      <option.icon className="size-5" />
-                    </span>
-                    <span className="text-sm font-semibold">{option.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {mode === "pf" ? (
+          <form onSubmit={handleSubmit}>
+            <CardContent className="flex flex-col gap-4">
               <div className="flex items-center gap-3 rounded-xl border border-brand-sky/25 bg-brand-blue/25 p-4">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-yellow/15 text-brand-yellow">
                   <ShieldCheck className="size-5" />
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate font-semibold">{pfUser.name}</p>
+                  <p className="font-semibold">Acceso seguro</p>
                   <p className="text-xs text-muted-foreground">
-                    Administrador de rutinas y periodos
+                    Datos guardados en Vercel Postgres
                   </p>
                 </div>
               </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="category">Tu categoría</Label>
-                <Select value={categoryId} onValueChange={setCategoryId}>
-                  <SelectTrigger id="category" className="h-12 w-full">
-                    <SelectValue placeholder="Selecciona categoría…" />
-                  </SelectTrigger>
-                  <SelectContent
-                    position="popper"
-                    className="w-[var(--radix-select-trigger-width)]"
-                  >
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="min-h-4 text-xs text-muted-foreground">
-                  {athleteForCategory
-                    ? `Entrarás como ${athleteForCategory.name}`
-                    : categoryId
-                      ? "Sin deportista demo en esta categoría: entrarás como invitado."
-                      : ""}
-                </p>
+
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="nombre@cece.club"
+                  required
+                />
               </div>
-            )}
-          </CardContent>
 
-          <CardFooter>
-            <Button
-              type="button"
-              size="lg"
-              className="h-12 w-full text-base font-semibold"
-              disabled={mode === "deportista" && !categoryId}
-              onClick={handleEnter}
-            >
-              Entrar al panel
-              <ArrowRight />
-            </Button>
-          </CardFooter>
+              <div className="grid gap-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                />
+              </div>
+
+              {error && (
+                <p className="rounded-lg border border-brand-red/30 bg-brand-red/10 px-3 py-2 text-sm text-brand-red">
+                  {error}
+                </p>
+              )}
+
+              <div className="rounded-xl border border-dashed border-white/10 bg-white/5 p-3 text-xs text-muted-foreground">
+                <p className="mb-1 flex items-center gap-2 font-semibold text-foreground">
+                  <Dumbbell className="size-3.5 text-brand-yellow" />
+                  Cuentas demo (tras ejecutar seed)
+                </p>
+                <p>PF: carlos.pf@cece.club</p>
+                <p>Deportista: lucia.vargas@cece.club</p>
+                <p className="mt-1 text-brand-yellow">Contraseña: excelsior2026</p>
+              </div>
+            </CardContent>
+
+            <CardFooter>
+              <Button
+                type="submit"
+                size="lg"
+                className={cn("h-12 w-full text-base font-semibold")}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <LoaderCircle className="animate-spin" />
+                    Entrando…
+                  </>
+                ) : (
+                  <>
+                    Entrar al panel
+                    <ArrowRight />
+                  </>
+                )}
+              </Button>
+            </CardFooter>
+          </form>
         </Card>
-
-        <p className="relative z-10 mt-6 text-center text-xs text-muted-foreground">
-          Maqueta funcional · datos simulados
-        </p>
       </section>
     </div>
   );

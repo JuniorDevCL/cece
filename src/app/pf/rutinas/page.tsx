@@ -14,7 +14,6 @@ import {
   type RoutineExerciseDraft,
   useTrainingData,
 } from "@/contexts/data-context";
-import { useAuth } from "@/contexts/auth-context";
 import type { RoutineDayNumber } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,7 +55,6 @@ function initialDays(): RoutineExerciseDraft[][] {
 }
 
 export default function PFRutinasPage() {
-  const { session } = useAuth();
   const { exercises, routines, routineExercises, addRoutine } =
     useTrainingData();
   const [name, setName] = useState("");
@@ -109,7 +107,7 @@ export default function PFRutinasPage() {
     );
   }
 
-  function saveRoutine(event: React.FormEvent) {
+  async function saveRoutine(event: React.FormEvent) {
     event.preventDefault();
     const items = days.flat();
     if (
@@ -118,10 +116,9 @@ export default function PFRutinasPage() {
       items.some((item) => !item.exerciseId)
     )
       return;
-    addRoutine(
+    await addRoutine(
       { name: name.trim(), description: description.trim() },
-      items,
-      session?.userId ?? "user-pf-1"
+      items
     );
     setSavedMessage(`“${name.trim()}” se guardó con sus tres días.`);
     setName("");

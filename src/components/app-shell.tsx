@@ -8,8 +8,8 @@ import {
   ClipboardList,
   Dumbbell,
   LogOut,
-  RotateCcw,
   UserRound,
+  UsersRound,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useTrainingData } from "@/contexts/data-context";
@@ -25,6 +25,8 @@ const navByRole = {
     { href: "/pf/dashboard", label: "Planificación", icon: CalendarDays },
     { href: "/pf/rutinas", label: "Rutinas", icon: ClipboardList },
     { href: "/pf/ejercicios", label: "Ejercicios", icon: Dumbbell },
+    { href: "/pf/deportistas", label: "Deportistas", icon: UsersRound },
+    { href: "/pf/asistencia", label: "Asistencia", icon: UserRound },
   ],
   deportista: [
     { href: "/atleta/dashboard", label: "Mi entrenamiento", icon: Dumbbell },
@@ -44,7 +46,7 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
   const { session, isLoading, logout } = useAuth();
-  const { resetData } = useTrainingData();
+  const { isLoading: dataLoading, error: dataError } = useTrainingData();
   const nav = navByRole[role];
   const category = session?.categoryId
     ? getCategoryById(session.categoryId)
@@ -61,11 +63,16 @@ export function AppShell({
     router.replace("/login");
   }
 
-  if (isLoading || !session || session.role !== role) {
+  if (isLoading || dataLoading || !session || session.role !== role) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <BrandLogo size={64} className="animate-pulse" />
         <p className="text-sm text-muted-foreground">Cargando sesión…</p>
+        {dataError && (
+          <p className="max-w-md px-4 text-center text-xs text-brand-red">
+            {dataError}
+          </p>
+        )}
       </div>
     );
   }
@@ -126,15 +133,10 @@ export function AppShell({
               </p>
             </div>
           </div>
-          {role === "pf" && (
-            <Button
-              variant="ghost"
-              className="mb-1 w-full justify-start text-muted-foreground"
-              onClick={resetData}
-            >
-              <RotateCcw />
-              Restaurar datos demo
-            </Button>
+          {role === "pf" && dataError && (
+            <p className="mb-3 rounded-lg border border-brand-red/30 bg-brand-red/10 p-2 text-xs text-brand-red">
+              {dataError}
+            </p>
           )}
           <Button
             variant="ghost"

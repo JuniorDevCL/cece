@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Excelsior — Preparación Física
 
-## Getting Started
+MVP del club Excelsior con Next.js, Auth.js, Vercel Postgres (Neon) y despliegue en Vercel.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router)
+- **Auth.js** (`next-auth`) — login por email/contraseña
+- **Vercel Postgres / Neon** — datos persistentes
+- **Drizzle ORM**
+
+## Configuración local
+
+1. Copia `.env.example` a `.env.local` y completa:
+
+```env
+POSTGRES_URL="postgresql://..."
+AUTH_SECRET="genera-un-secreto-largo"
+AUTH_URL="http://localhost:3000"
+```
+
+2. Instala dependencias:
+
+```bash
+npm install --legacy-peer-deps
+```
+
+3. Crea tablas y datos demo:
+
+```bash
+npm run db:seed
+```
+
+4. Inicia la app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Cuentas demo (tras seed)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Rol | Email | Contraseña |
+|-----|-------|------------|
+| Preparador | `carlos.pf@cece.club` | `excelsior2026` |
+| Deportista | `lucia.vargas@cece.club` | `excelsior2026` |
+| Deportista | `diego.rivas@cece.club` | `excelsior2026` |
+| Deportista | `sofia.torres@cece.club` | `excelsior2026` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Despliegue en Vercel
 
-## Learn More
+1. Conecta el repo `JuniorDevCL/cece`
+2. En **Storage → Postgres**, crea una base Neon (Vercel Postgres)
+3. En **Settings → Environment Variables**, agrega:
+   - `POSTGRES_URL` (automática al conectar storage)
+   - `AUTH_SECRET` (genera uno seguro)
+   - `AUTH_URL` = `https://tu-dominio.vercel.app`
+4. Redeploy
+5. Ejecuta el seed una vez (local apuntando a la DB de producción o desde CLI):
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run db:seed
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Funcionalidades
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Login real por usuario (PF y deportistas)
+- Planificación por categoría, rutinas de 3 días, ejercicios con YouTube
+- Progreso de ejercicios guardado por deportista en la nube
+- **Marcar presente** en días de pesas (L/M/V)
+- Panel PF de asistencia por categoría y fecha
+- Crear nuevas cuentas de deportistas desde `/pf/deportistas`

@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
   CalendarX,
   Check,
   ChevronRight,
   Clock3,
+  ClipboardCheck,
   Dumbbell,
   ExternalLink,
   Flame,
+  LoaderCircle,
   PartyPopper,
   PlayCircle,
   Repeat2,
@@ -18,6 +20,14 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useTrainingData } from "@/contexts/data-context";
+import {
+  getCompletionsForDateAction,
+  toggleCompletionAction,
+} from "@/lib/actions/completions";
+import {
+  getMyAttendanceAction,
+  markAttendanceAction,
+} from "@/lib/actions/attendance";
 import { getCategoryById } from "@/lib/mockData";
 import type { RoutineDayNumber } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -96,6 +106,9 @@ export default function AtletaDashboardPage() {
     nextSession?.routineDay ?? 1
   );
   const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
+  const [attendanceMarked, setAttendanceMarked] = useState(false);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
+  const [attendanceMessage, setAttendanceMessage] = useState("");
 
   const todayIso = toLocalIso(today);
   const category = session?.categoryId
@@ -169,12 +182,47 @@ export default function AtletaDashboardPage() {
     };
   });
 
-  function toggleExercise(id: string) {
+  useEffect(() => {
+    void getCompletionsForDateAction(todayIso).then(setCompleted);
+  }, [todayIso, selectedDay]);
+
+  useEffect(() => {
+    void getMyAttendanceAction(todayIso).then((record) => {
+      setAttendanceMarked(Boolean(record?.present));
+    });
+  }, [todayIso]);
+
+  async function toggleExercise(id: string) {
+    const result = await toggleCompletionAction(id, todayIso);
     setCompleted((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id]
+      result.completed
+        ? [...new Set([...current, id])]
+        : current.filter((item) => item !== id)
     );
+  }
+
+  async function handleMarkAttendance() {
+    if (!todayRoutineDay || !period) return;
+    setAttendanceLoading(true);
+    setAttendanceMessage("");
+    try {
+      const result = await markAttendanceAction({
+        date: todayIso,
+        routineDay: todayRoutineDay,
+      });
+      setAttendanceMarked(true);
+      setAttendanceMessage(
+        result.alreadyMarked
+          ? "Ya habías marcado presente hoy."
+          : "¡Presente registrado! Buen entrenamiento."
+      );
+    } catch (cause) {
+      setAttendanceMessage(
+        cause instanceof Error ? cause.message : "No se pudo marcar asistencia"
+      );
+    } finally {
+      setAttendanceLoading(false);
+    }
   }
 
   return (
@@ -240,6 +288,48 @@ export default function AtletaDashboardPage() {
                 {category?.label} para esta fecha.
               </p>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {period && todayRoutineDay && (
+        <Card className="border-brand-yellow/20 bg-brand-yellow/8">
+          <CardContent className="flex flex-col gap-4 py-1 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-yellow/15 text-brand-yellow ring-1 ring-brand-yellow/30">
+                <ClipboardCheck className="size-5" />
+              </span>
+              <div>
+                <p className="font-semibold">Asistencia a preparación física</p>
+                <p className="text-sm text-muted-foreground">
+                  Hoy toca Día {todayRoutineDay} ({WEEKDAY_LABEL[todayRoutineDay]}).
+                  Marca presente al llegar a la sesión.
+                </p>
+                {attendanceMessage && (
+                  <p className="mt-2 text-xs text-brand-yellow">{attendanceMessage}</p>
+                )}
+              </div>
+            </div>
+            <Button
+              className="w-full sm:w-auto"
+              disabled={attendanceMarked || attendanceLoading}
+              onClick={() => void handleMarkAttendance()}
+            >
+              {attendanceLoading ? (
+                <>
+                  <LoaderCircle className="animate-spin" />
+                  Guardando…
+                </>
+              ) : attendanceMarked ? (
+                <>
+                  <Check /> Presente registrado
+                </>
+              ) : (
+                <>
+                  <ClipboardCheck /> Marcar presente
+                </>
+              )}
+            </Button>
           </CardContent>
         </Card>
       )}
@@ -484,8 +574,9 @@ export default function AtletaDashboardPage() {
                   {activeItem && (
                     <Button
                       onClick={() => {
-                        toggleExercise(activeItem.id);
-                        setActiveExerciseId(null);
+                        void toggleExercise(activeItem.id).then(() =>
+                          setActiveExerciseId(null)
+                        );
                       }}
                     >
                       <Check />
@@ -556,12 +647,11 @@ export default function AtletaDashboardPage() {
           size="lg"
           className="h-12 w-full sm:hidden"
           onClick={() =>
-            setCompleted((current) => [
-              ...current,
-              ...routineItems
-                .map((item) => item.id)
-                .filter((id) => !current.includes(id)),
-            ])
+            void Promise.all(
+              routineItems
+                .filter((item) => !completed.includes(item.id))
+                .map((item) => toggleCompletionAction(item.id, todayIso))
+            ).then(() => getCompletionsForDateAction(todayIso).then(setCompleted))
           }
         >
           <Check /> Marcar día {selectedDay} completo
